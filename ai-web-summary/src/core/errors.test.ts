@@ -9,8 +9,17 @@ describe('SummarizeError', () => {
     expect(err.message).toBe('密钥无效');
   });
 
+  it('name 为 SummarizeError', () => {
+    const err = new SummarizeError(SummarizeErrorKind.Network, '网络错误');
+    expect(err.name).toBe('SummarizeError');
+  });
+
   it('fromHttpStatus 把 401 映射为 InvalidKey', () => {
     expect(SummarizeError.fromHttpStatus(401).kind).toBe(SummarizeErrorKind.InvalidKey);
+  });
+
+  it('fromHttpStatus 把 403 映射为 InvalidKey', () => {
+    expect(SummarizeError.fromHttpStatus(403).kind).toBe(SummarizeErrorKind.InvalidKey);
   });
 
   it('fromHttpStatus 把 429 映射为 RateLimited', () => {
