@@ -1,7 +1,7 @@
 import { Provider, ProviderConfig, SummarizeParams } from './types';
 import { buildSystemPrompt } from '../prompt';
 import { iterateSseData } from '../sse';
-import { SummarizeError, SummarizeErrorKind } from '../errors';
+import { SummarizeError, SummarizeErrorKind, ABORT_ERROR_NAME } from '../errors';
 
 /** OpenAI 官方默认服务地址 */
 const DEFAULT_OPENAI_BASE = 'https://api.openai.com';
@@ -46,7 +46,7 @@ export class OpenAIProvider implements Provider {
       });
     } catch (e) {
       // AbortError 透传(由上层识别为用户取消),其余视为网络错误
-      if (e instanceof Error && e.name === 'AbortError') throw e;
+      if (e instanceof Error && e.name === ABORT_ERROR_NAME) throw e;
       throw new SummarizeError(SummarizeErrorKind.Network, '网络错误,请重试');
     }
 

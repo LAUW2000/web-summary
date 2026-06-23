@@ -1,3 +1,6 @@
+/** Web 标准中止信号触发的错误名(fetch 被 AbortSignal 取消时 error.name 的值) */
+export const ABORT_ERROR_NAME = 'AbortError';
+
 /** 总结过程中的错误类别 */
 export enum SummarizeErrorKind {
   /** 未配置任何模型 / 未选中模型 */
