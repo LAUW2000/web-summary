@@ -1,0 +1,7 @@
+/** 设置页基础排版 */
+body { max-width: 560px; margin: 24px auto; font: 14px/1.6 system-ui, sans-serif; padding: 0 16px; }
+form { display: flex; flex-direction: column; gap: 8px; }
+input, select, button { padding: 6px; font-size: 14px; }
+#config-list { list-style: none; padding: 0; }
+#config-list li { display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; padding: 8px; margin-bottom: 6px; border-radius: 6px; }
+#msg { color: #c00; min-height: 1.2em; }

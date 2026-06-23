@@ -1,0 +1,9 @@
+/** 弹窗整体尺寸与基础排版 */
+body { width: 360px; margin: 0; padding: 12px; font: 14px/1.5 system-ui, sans-serif; }
+header { display: flex; gap: 8px; margin-bottom: 8px; }
+#model-select { flex: 1; }
+#summarize-btn { width: 100%; padding: 8px; cursor: pointer; }
+.notice { background: #fff7e6; border: 1px solid #ffd591; padding: 6px; margin: 8px 0; font-size: 12px; }
+.notice.error { background: #fff1f0; border-color: #ffa39e; }
+.result { white-space: pre-wrap; word-break: break-word; min-height: 60px; margin: 8px 0; }
+#copy-btn { width: 100%; padding: 6px; cursor: pointer; }

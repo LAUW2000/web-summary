@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header>
+      <select id="model-select" title="选择模型"></select>
+      <button id="settings-btn" title="设置">⚙️</button>
+    </header>
+    <button id="summarize-btn">总结此页</button>
+    <div id="notice" class="notice" hidden></div>
+    <pre id="result" class="result"></pre>
+    <button id="copy-btn" hidden>复制</button>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>
