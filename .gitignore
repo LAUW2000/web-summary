@@ -1,0 +1,17 @@
+# Visual brainstorming companion cache
+.superpowers/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Env / secrets
+.env
+.env.local
+
+# Editor / OS
+.DS_Store
+*.log
