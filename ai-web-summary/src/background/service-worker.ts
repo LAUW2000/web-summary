@@ -9,11 +9,16 @@ import { SummarizeError, SummarizeErrorKind, ABORT_ERROR_NAME } from '@/core/err
 
 /**
  * 向指定标签页的 content script 请求正文。
+ * 若该页面无法注入内容脚本(如 chrome://、PDF、扩展页),抛出可读的 EmptyContent 错误。
  * @param tabId 标签页 id
  * @returns 抽取结果
  */
 async function requestExtract(tabId: number): Promise<ExtractResult> {
-  return chrome.tabs.sendMessage<unknown, ExtractResult>(tabId, { type: MSG_EXTRACT });
+  try {
+    return await chrome.tabs.sendMessage<unknown, ExtractResult>(tabId, { type: MSG_EXTRACT });
+  } catch {
+    throw new SummarizeError(SummarizeErrorKind.EmptyContent, '此页面不支持总结(无法读取内容)');
+  }
 }
 
 /**
