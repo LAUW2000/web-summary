@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { OpenAIProvider } from './openai';
 import { ProviderKind } from './types';
-import { SummarizeError, SummarizeErrorKind } from '../errors';
+import { SummarizeErrorKind } from '../errors';
 
 /**
  * 构造一个返回 SSE 流的假 Response。
