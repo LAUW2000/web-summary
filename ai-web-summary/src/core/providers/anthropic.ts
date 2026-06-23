@@ -61,13 +61,21 @@ export class AnthropicProvider implements Provider {
     for await (const data of iterateSseData(res.body)) {
       try {
         const json = JSON.parse(data);
+        if (json?.type === 'error') {
+          const msg: string | undefined = json?.error?.message;
+          throw new SummarizeError(
+            SummarizeErrorKind.ServerError,
+            msg ? `服务端返回错误:${msg}` : '服务端返回错误,请重试',
+          );
+        }
         if (json?.type === 'content_block_delta' && json?.delta?.type === 'text_delta') {
           const text: string | undefined = json.delta.text;
           if (text) yield text;
         }
         if (json?.type === 'message_stop') return;
-      } catch {
-        // 忽略非 JSON 行
+      } catch (e) {
+        // SummarizeError 是我们主动抛出的错误,必须向上传播;仅忽略 JSON 解析等非预期错误
+        if (e instanceof SummarizeError) throw e;
       }
     }
   }

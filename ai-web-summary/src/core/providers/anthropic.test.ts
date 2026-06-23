@@ -41,6 +41,17 @@ describe('AnthropicProvider', () => {
     }).rejects.toMatchObject({ kind: SummarizeErrorKind.RateLimited });
   });
 
+  it('流式 error 事件抛 ServerError', async () => {
+    const sse = [
+      'data: {"type":"error","error":{"type":"overloaded_error","message":"过载"}}\n\n',
+    ];
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(fakeResponse(sse)));
+    const p = new AnthropicProvider(cfg);
+    await expect(async () => {
+      for await (const _ of p.summarize({ text: 'x', signal: new AbortController().signal })) { /* drain */ }
+    }).rejects.toMatchObject({ kind: SummarizeErrorKind.ServerError });
+  });
+
   it('默认 baseURL 为官方地址', () => {
     expect(new AnthropicProvider(cfg).endpoint).toBe('https://api.anthropic.com/v1/messages');
   });
