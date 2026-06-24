@@ -1,4 +1,7 @@
-import { loadConfigs, getSelectedId, setSelectedId } from '@/core/storage';
+import { loadConfigs, saveConfigs, getSelectedId, setSelectedId } from '@/core/storage';
+import { MODEL_PRESETS } from '@/core/presets';
+import { genId } from '@/core/id';
+import { providerConfigSchema, type ProviderConfig } from '@/core/providers/types';
 import {
   PORT_SUMMARIZE, StreamMessageKind,
   type StreamMessage, type SummarizeRequest,
@@ -7,7 +10,13 @@ import {
 /** 弹窗内引用的 DOM 元素集合 */
 const els = {
   select: document.getElementById('model-select') as HTMLSelectElement,
-  settings: document.getElementById('settings-btn') as HTMLButtonElement,
+  settingsBtn: document.getElementById('settings-btn') as HTMLButtonElement,
+  panel: document.getElementById('settings-panel') as HTMLElement,
+  presetSelect: document.getElementById('preset-select') as HTMLSelectElement,
+  keyInput: document.getElementById('key-input') as HTMLInputElement,
+  saveBtn: document.getElementById('save-btn') as HTMLButtonElement,
+  settingsMsg: document.getElementById('settings-msg') as HTMLParagraphElement,
+  savedList: document.getElementById('saved-list') as HTMLUListElement,
   summarize: document.getElementById('summarize-btn') as HTMLButtonElement,
   notice: document.getElementById('notice') as HTMLDivElement,
   result: document.getElementById('result') as HTMLPreElement,
@@ -15,7 +24,7 @@ const els = {
 };
 
 /**
- * 显示一条提示。
+ * 显示总结区的提示。
  * @param text 提示文案
  * @param isError 是否错误样式
  */
@@ -25,31 +34,101 @@ function showNotice(text: string, isError = false): void {
   els.notice.hidden = false;
 }
 
-/** 用存储中的配置填充模型下拉,并恢复上次选中项 */
-async function initModelSelect(): Promise<void> {
+/** 用内置预设填充"添加模型"下拉。 */
+function initPresetSelect(): void {
+  els.presetSelect.innerHTML = '';
+  for (const p of MODEL_PRESETS) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.label;
+    els.presetSelect.appendChild(opt);
+  }
+}
+
+/**
+ * 重新渲染顶部"已保存模型"下拉并恢复选中项;
+ * 无配置时禁用总结按钮并自动展开设置区。
+ * @returns 渲染完成的 Promise
+ */
+async function refreshModelSelect(): Promise<void> {
   const configs = await loadConfigs();
   els.select.innerHTML = '';
   if (configs.length === 0) {
-    showNotice('尚未配置模型,点击 ⚙️ 前往设置页添加', true);
     els.summarize.disabled = true;
+    els.panel.hidden = false;
+    showNotice('尚未配置模型,请在下方"添加模型"里选择预设并粘贴 API Key', true);
     return;
   }
+  els.summarize.disabled = false;
   for (const c of configs) {
     const opt = document.createElement('option');
     opt.value = c.id;
-    opt.textContent = `${c.label}(${c.model})`;
+    opt.textContent = c.label;
     els.select.appendChild(opt);
   }
   const selected = await getSelectedId();
   if (selected && configs.some((c) => c.id === selected)) els.select.value = selected;
 }
 
-// 切换下拉即记住选中项
+/**
+ * 重新渲染"已保存"配置列表(每条带删除按钮)。
+ * @returns 渲染完成的 Promise
+ */
+async function refreshSavedList(): Promise<void> {
+  const configs = await loadConfigs();
+  els.savedList.innerHTML = '';
+  for (const c of configs) {
+    const li = document.createElement('li');
+    const span = document.createElement('span');
+    span.textContent = c.label;
+    const del = document.createElement('button');
+    del.textContent = '删除';
+    del.addEventListener('click', async () => {
+      const rest = (await loadConfigs()).filter((x) => x.id !== c.id);
+      await saveConfigs(rest);
+      await refreshSavedList();
+      await refreshModelSelect();
+    });
+    li.append(span, del);
+    els.savedList.appendChild(li);
+  }
+}
+
+/**
+ * 将当前选中的预设 + 输入的 Key 保存为一条配置,并设为当前选中。
+ * @returns 保存完成的 Promise
+ */
+async function saveCurrentPreset(): Promise<void> {
+  els.settingsMsg.textContent = '';
+  const preset = MODEL_PRESETS.find((p) => p.id === els.presetSelect.value);
+  if (!preset) return;
+  const key = els.keyInput.value.trim();
+  if (!key) { els.settingsMsg.textContent = '请填写 API Key'; return; }
+  const candidate: ProviderConfig = {
+    id: genId(),
+    label: preset.label,
+    kind: preset.kind,
+    model: preset.model,
+    apiKey: key,
+    baseURL: preset.baseURL || undefined,
+  };
+  const parsed = providerConfigSchema.safeParse(candidate);
+  if (!parsed.success) { els.settingsMsg.textContent = '配置无效,请重试'; return; }
+  await saveConfigs([...(await loadConfigs()), parsed.data]);
+  await setSelectedId(parsed.data.id);
+  els.keyInput.value = '';
+  els.settingsMsg.textContent = '已保存 ✓';
+  els.notice.hidden = true;
+  await refreshSavedList();
+  await refreshModelSelect();
+}
+
+// 切换设置区展开/收起
+els.settingsBtn.addEventListener('click', () => { els.panel.hidden = !els.panel.hidden; });
+// 保存预设配置
+els.saveBtn.addEventListener('click', () => void saveCurrentPreset());
+// 切换已保存模型即记住选中项
 els.select.addEventListener('change', () => void setSelectedId(els.select.value));
-
-// 打开设置页
-els.settings.addEventListener('click', () => chrome.runtime.openOptionsPage());
-
 // 复制结果
 els.copy.addEventListener('click', () => void navigator.clipboard.writeText(els.result.textContent ?? ''));
 
@@ -83,4 +162,7 @@ els.summarize.addEventListener('click', () => {
   port.postMessage(req);
 });
 
-void initModelSelect();
+// 初始化
+initPresetSelect();
+void refreshSavedList();
+void refreshModelSelect();

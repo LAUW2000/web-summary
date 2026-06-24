@@ -1,5 +1,6 @@
 import { loadConfigs, saveConfigs } from '@/core/storage';
 import { ProviderKind, providerConfigSchema, type ProviderConfig } from '@/core/providers/types';
+import { genId } from '@/core/id';
 
 /** 设置页 DOM 元素集合 */
 const els = {
@@ -12,14 +13,6 @@ const els = {
   base: document.getElementById('f-base') as HTMLInputElement,
   msg: document.getElementById('msg') as HTMLParagraphElement,
 };
-
-/**
- * 生成一个简单的唯一 id(基于时间戳)。
- * @returns 格式为 `cfg_<时间戳>_<随机数>` 的 id 字符串
- */
-function genId(): string {
-  return `cfg_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
-}
 
 /**
  * 重新渲染已保存的配置列表。
