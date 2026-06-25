@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <h1>模型配置</h1>
+    <ul id="config-list"></ul>
+    <h2>添加配置</h2>
+    <form id="add-form">
+      <input id="f-label" placeholder="显示名,如 我的GPT" required />
+      <select id="f-kind">
+        <option value="openai">OpenAI 格式(GPT / DeepSeek / 本地)</option>
+        <option value="anthropic">Anthropic 格式(Claude)</option>
+      </select>
+      <input id="f-model" placeholder="模型名,如 gpt-4o" required />
+      <input id="f-key" placeholder="API Key" required />
+      <input id="f-base" placeholder="自定义 baseURL(可选,如 https://api.deepseek.com)" />
+      <button type="submit">添加</button>
+    </form>
+    <p id="msg"></p>
+    <script type="module" src="./options.ts"></script>
+  </body>
+</html>

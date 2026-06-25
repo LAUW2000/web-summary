@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript · Vite · CRXJS · Vitest · @mozilla/readability · zod
 
+> **项目根目录:** 所有代码与配置放在 `ai-web-summary/` 子目录下(git 仓库在上一级 `coding/`)。本计划中所有相对路径(如 `package.json`、`src/...`)均以 `ai-web-summary/` 为根。
+
 ---
 
 ## 项目规范(贯穿所有任务,见 `AGENTS.md`)
