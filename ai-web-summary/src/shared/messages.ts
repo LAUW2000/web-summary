@@ -20,6 +20,8 @@ export enum StreamMessageKind {
   Chunk = 'chunk',
   /** 正文被截断的提示(总结开始前发一次) */
   Truncated = 'truncated',
+  /** 本次结果来自缓存(总结开始前发一次,随后照常推 Chunk) */
+  Cached = 'cached',
   /** 流正常结束 */
   Done = 'done',
   /** 出错 */
@@ -30,6 +32,7 @@ export enum StreamMessageKind {
 export const STREAM_MESSAGE_KIND_VALUES: readonly StreamMessageKind[] = [
   StreamMessageKind.Chunk,
   StreamMessageKind.Truncated,
+  StreamMessageKind.Cached,
   StreamMessageKind.Done,
   StreamMessageKind.Error,
 ];
@@ -38,6 +41,7 @@ export const STREAM_MESSAGE_KIND_VALUES: readonly StreamMessageKind[] = [
 export type StreamMessage =
   | { kind: StreamMessageKind.Chunk; text: string }
   | { kind: StreamMessageKind.Truncated }
+  | { kind: StreamMessageKind.Cached }
   | { kind: StreamMessageKind.Done }
   | { kind: StreamMessageKind.Error; errorKind: SummarizeErrorKind; message: string };
 
@@ -45,4 +49,6 @@ export type StreamMessage =
 export interface SummarizeRequest {
   /** 选中的配置 id */
   providerId: string;
+  /** 是否忽略缓存强制重新总结 */
+  force?: boolean;
 }

@@ -267,3 +267,17 @@ select option { background: #0f150f; color: var(--text); }
 }
 .btn-copy::before { content: "⧉ "; }
 .btn-copy:hover { color: var(--green); border-color: var(--green-dim); }
+
+/** 重新总结(忽略缓存) */
+.btn-refresh {
+  padding: 9px;
+  font: 700 11px var(--mono);
+  letter-spacing: 1px;
+  color: var(--green);
+  background: none;
+  border: 1px solid var(--green-dim);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.btn-refresh::before { content: "↻ "; }
+.btn-refresh:hover { background: rgba(67, 245, 139, 0.10); box-shadow: 0 0 10px rgba(67, 245, 139, 0.15); }
