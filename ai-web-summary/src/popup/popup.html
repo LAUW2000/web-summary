@@ -5,27 +5,42 @@
     <link rel="stylesheet" href="./popup.css" />
   </head>
   <body>
-    <header>
-      <select id="model-select" title="选择已保存的模型"></select>
-      <button id="settings-btn" title="设置">⚙️</button>
-    </header>
-    <button id="summarize-btn">总结此页</button>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">AI 网页总结</span>
+        </div>
+        <button id="settings-btn" class="icon-btn" title="设置" aria-label="设置">CONFIG</button>
+      </header>
 
-    <section id="settings-panel" hidden>
-      <h3>添加模型</h3>
-      <label>预设服务商 / 模型
-        <select id="preset-select"></select>
-      </label>
-      <input id="key-input" type="password" placeholder="粘贴该服务商的 API Key" />
-      <button id="save-btn">保存</button>
-      <p id="settings-msg" class="settings-msg"></p>
-      <h3>已保存</h3>
-      <ul id="saved-list"></ul>
-    </section>
+      <div class="control">
+        <div class="select-wrap">
+          <select id="model-select" title="选择已保存的模型"></select>
+        </div>
+        <button id="summarize-btn" class="btn-primary"><span class="btn-label">总结此页</span></button>
+      </div>
 
-    <div id="notice" class="notice" hidden></div>
-    <pre id="result" class="result"></pre>
-    <button id="copy-btn" hidden>复制</button>
+      <section id="settings-panel" class="panel" hidden>
+        <p class="panel-title">添加模型</p>
+        <label class="field">
+          <span class="field-label">预设服务商 / 模型</span>
+          <div class="select-wrap">
+            <select id="preset-select"></select>
+          </div>
+        </label>
+        <input id="key-input" class="input" type="password" placeholder="粘贴 API Key…" />
+        <button id="save-btn" class="btn-ghost">保存配置</button>
+        <p id="settings-msg" class="settings-msg"></p>
+        <p class="panel-title">已保存</p>
+        <ul id="saved-list" class="saved-list"></ul>
+      </section>
+
+      <div id="notice" class="notice" hidden></div>
+      <pre id="result" class="result"></pre>
+      <button id="refresh-btn" class="btn-refresh" hidden>重新总结</button>
+      <button id="copy-btn" class="btn-copy" hidden>复制摘要</button>
+    </div>
     <script type="module" src="./popup.ts"></script>
   </body>
 </html>

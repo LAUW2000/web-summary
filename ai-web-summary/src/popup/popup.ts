@@ -21,6 +21,7 @@ const els = {
   notice: document.getElementById('notice') as HTMLDivElement,
   result: document.getElementById('result') as HTMLPreElement,
   copy: document.getElementById('copy-btn') as HTMLButtonElement,
+  refresh: document.getElementById('refresh-btn') as HTMLButtonElement,
 };
 
 /**
@@ -132,12 +133,17 @@ els.select.addEventListener('change', () => void setSelectedId(els.select.value)
 // 复制结果
 els.copy.addEventListener('click', () => void navigator.clipboard.writeText(els.result.textContent ?? ''));
 
-// 点击总结:建立 port,接收流式消息
-els.summarize.addEventListener('click', () => {
+/**
+ * 发起一次总结:建立 port,接收流式消息并更新界面。
+ * @param force 是否忽略缓存强制重新总结
+ */
+function runSummarize(force: boolean): void {
   els.result.textContent = '';
   els.notice.hidden = true;
   els.copy.hidden = true;
+  els.refresh.hidden = true;
   els.summarize.disabled = true;
+  let fromCache = false;
 
   const port = chrome.runtime.connect({ name: PORT_SUMMARIZE });
   port.onMessage.addListener((m: StreamMessage) => {
@@ -148,9 +154,14 @@ els.summarize.addEventListener('click', () => {
       case StreamMessageKind.Truncated:
         showNotice('内容较长,已截断后部分再总结');
         break;
+      case StreamMessageKind.Cached:
+        fromCache = true;
+        showNotice('本页摘要来自缓存,如需最新可点「重新总结」');
+        break;
       case StreamMessageKind.Done:
         els.summarize.disabled = false;
         if (els.result.textContent) els.copy.hidden = false;
+        if (fromCache) els.refresh.hidden = false;
         break;
       case StreamMessageKind.Error:
         showNotice(m.message, true);
@@ -158,9 +169,14 @@ els.summarize.addEventListener('click', () => {
         break;
     }
   });
-  const req: SummarizeRequest = { providerId: els.select.value };
+  const req: SummarizeRequest = { providerId: els.select.value, force };
   port.postMessage(req);
-});
+}
+
+// 点击总结(优先用缓存)
+els.summarize.addEventListener('click', () => runSummarize(false));
+// 忽略缓存强制重新总结
+els.refresh.addEventListener('click', () => runSummarize(true));
 
 // 初始化
 initPresetSelect();

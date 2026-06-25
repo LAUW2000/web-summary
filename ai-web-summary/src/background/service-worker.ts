@@ -5,6 +5,7 @@ import {
 import { loadConfigs } from '@/core/storage';
 import { truncateText } from '@/core/truncate';
 import { createProvider } from '@/core/summarize';
+import { getCachedSummary, putCachedSummary } from '@/core/summary-cache';
 import { SummarizeError, SummarizeErrorKind, ABORT_ERROR_NAME } from '@/core/errors';
 
 /**
@@ -22,9 +23,9 @@ async function requestExtract(tabId: number): Promise<ExtractResult> {
 }
 
 /**
- * 处理一次总结请求:取正文→截断→选配置→流式回传。
+ * 处理一次总结请求:选配置→命中缓存则直接返回→否则取正文→截断→流式回传→写缓存。
  * @param port 与 popup 的长连接
- * @param req 总结请求(选中的配置 id)
+ * @param req 总结请求(选中的配置 id、是否强制刷新)
  * @param signal 取消信号
  * @returns 处理完成的 Promise
  */
@@ -40,21 +41,39 @@ async function handleSummarize(
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) throw new SummarizeError(SummarizeErrorKind.EmptyContent, '无法获取当前标签页');
 
+    const configs = await loadConfigs();
+    const config = configs.find((c) => c.id === req.providerId);
+    if (!config) throw new SummarizeError(SummarizeErrorKind.NoConfig, '请先到设置页添加并选择模型');
+
+    const url = tab.url ?? '';
+
+    // 命中缓存且非强制刷新 → 直接返回缓存(连正文都不必抽取)
+    if (!req.force && url) {
+      const cached = await getCachedSummary(url, config.kind, config.model);
+      if (cached) {
+        post({ kind: StreamMessageKind.Cached });
+        post({ kind: StreamMessageKind.Chunk, text: cached });
+        post({ kind: StreamMessageKind.Done });
+        return;
+      }
+    }
+
     const extracted = await requestExtract(tab.id);
     if (!extracted.text) throw new SummarizeError(SummarizeErrorKind.EmptyContent, '此页面无法提取正文');
 
     const { text, wasTruncated } = truncateText(extracted.text);
     if (wasTruncated) post({ kind: StreamMessageKind.Truncated });
 
-    const configs = await loadConfigs();
-    const config = configs.find((c) => c.id === req.providerId);
-    if (!config) throw new SummarizeError(SummarizeErrorKind.NoConfig, '请先到设置页添加并选择模型');
-
     const provider = createProvider(config);
+    let full = '';
     for await (const chunk of provider.summarize({ text, pageLang: extracted.pageLang, signal })) {
+      full += chunk;
       post({ kind: StreamMessageKind.Chunk, text: chunk });
     }
     post({ kind: StreamMessageKind.Done });
+
+    // 成功且有内容 → 写入缓存,供下次同页同模型直接返回
+    if (url && full.trim()) await putCachedSummary(url, config.kind, config.model, full);
   } catch (e) {
     if (e instanceof Error && e.name === ABORT_ERROR_NAME) return; // 用户取消,静默
     if (e instanceof SummarizeError) {
