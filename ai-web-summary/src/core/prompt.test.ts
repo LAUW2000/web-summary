@@ -12,4 +12,12 @@ describe('buildSystemPrompt', () => {
     const p = buildSystemPrompt('en');
     expect(p).toContain('en');
   });
+
+  it('始终以正文实际文字判断输出语言(页面声明不可靠时以正文为准)', () => {
+    // 无声明:强调以正文判断
+    expect(buildSystemPrompt()).toContain('以正文实际文字判断');
+    // 有声明:声明仅供参考,以正文为准
+    const p = buildSystemPrompt('en');
+    expect(p).toContain('以正文为准');
+  });
 });
